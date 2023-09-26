@@ -1,4 +1,5 @@
 import socket
+import json
 
 HOST = 'localhost'
 PORT = 12345
@@ -6,23 +7,32 @@ PORT = 12345
 # Create a socket object
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-# Bind the socket to a specific address and port
-s.bind((HOST, PORT))
+# Connect to the Java server
+s.connect((HOST, PORT))
 
-# Listen for incoming connections
-s.listen(1)
 
-# Accept a connection
-conn, addr = s.accept()
-print('Connected by', addr)
+def send_request(request):
+    # Convert the request to JSON
+    json_request = json.dumps(request)
 
-# Receive data from the Java client
-data = conn.recv(1024)
-print('Received:', data.decode())
+    # Send the JSON-encoded request to the Java server
+    s.sendall(json_request.encode())
 
-# Send a response back to the Java client
-response = 'Hello from Python'
-conn.sendall(response.encode())
 
-# Close the connection
-conn.close()
+def receive_response():
+    # Receive the response from the Java server
+    data = s.recv(1024)
+
+    # Decode the JSON-encoded response
+    json_response = data.decode()
+    response = json.loads(json_response)
+
+    return response
+
+
+# Example usage:
+request = {"action": "make_move", "move": "e2e4"}
+send_request(request)
+
+response = receive_response()
+print(response)
